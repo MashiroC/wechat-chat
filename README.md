@@ -23,6 +23,7 @@
 
 ### 使用的框架：
 
-- spring boot
-- netty
+- spring boot 2.0
+- netty4
 
+不想写了

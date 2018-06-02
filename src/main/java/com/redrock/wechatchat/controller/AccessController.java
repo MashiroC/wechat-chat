@@ -27,7 +27,6 @@ public class AccessController {
     public WechatMessage reply(@RequestBody WechatMessage message) {
         TuringResponseEntity entity = TuringUtil.chatWithTuringRobot(message.getFromUserName(), message.getContent());
         String content = entity.getText();
-
         WechatMessage responseMessage = new WechatMessage();
         responseMessage.setFromUserName(message.getToUserName());
         responseMessage.setToUserName(message.getFromUserName());
