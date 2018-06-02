@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="jquery-3.3.1.min.js">
+    </script>
+    <meta charset="UTF-8">
+    <title>Insert title here</title>
+</head>
+<body>
+<script type="text/javascript">
+    var socket;
+    var info = null;
+    //    var url = window.location.href;
+    //    alert(url);
+    if (!window.WebSocket) {
+        window.WebSocket = window.MozWebSocket;
+    }
+    if (window.WebSocket) {
+        var param = window.location.search.substr(1);
+        getInfo(param);
+        socket = new WebSocket("wss://chat.mashiroc.cn/ws?openid=" + info.openid);
+//        socket = new WebSocket("ws://localhost:8081/ws?openid=" + info.openid);
+        socket.onmessage = function (event) {
+            var ta = document.getElementById('responseText');
+            var msg = JSON.parse(event.data);
+            if (msg.type == "chat") {
+                ta.value = ta.value + '\n' + "【" + msg.fromUser + "】\n" + msg.text;
+            } else if (msg.type == "add") {
+                console.log("add");
+                havaAdd(msg.fromUser, msg.text);
+            } else if (msg.type == "newFriend") {
+                console.log("newFriend");
+                printInfo();
+            }
+        };
+        socket.onopen = function (event) {
+            var ta = document.getElementById('responseText');
+            ta.value = "连接开启!";
+            printInfo();
+        };
+
+        socket.onclose = function (event) {
+            var ta = document.getElementById('responseText');
+            ta.value = ta.value + '\n' + "连接被关闭";
+        };
+    } else {
+        alert("你的浏览器不支持！");
+    }
+
+    function havaAdd(fromUser, img) {
+        addFrom(fromUser, img);
+    }
+
+    function addFriendSuccess(form, toUser) {
+        var data = new FormData;
+        data.append('fromUser', toUser);
+        data.append('toUser', info.openid);
+        console.log(data);
+        $.ajax({
+            type: 'POST',
+            url: "/addFriendSuccess",
+            processData: false,
+            contentType: false,
+            data: data
+        });
+        var parent = form.parentNode;
+        parent.removeChild(form);
+        setTimeout("printInfo()", 500);
+    }
+
+
+    function send(message, toUser) {
+        var ta = document.getElementById('responseText');
+        if (!window.WebSocket) {
+            return;
+        }
+        if (socket.readyState == WebSocket.OPEN) {
+            socket.send("{\"fromUser\":\"" + info.nickname + "\",\"toUser\":\"" + toUser + "\",\"text\":\"" + message + "\",\"type\"=\"chat\"}");
+            ta.value = ta.value + "\n【" + info.nickname + "】 → 【" + toUser + "】\n" + message;
+        } else {
+            alert("连接没有开启.");
+        }
+    }
+
+    function getInfo(param) {
+        info = $.ajax({url: "/getInfo?" + param, async: false}).responseText;
+        info = JSON.parse(info);
+    }
+
+    function printInfo() {
+        var json = $.ajax({url: "/getFriendList?openid=" + info.openid, async: false}).responseText;
+        json = JSON.parse(json);
+        $("#friends").html('');
+        for (var i = 0; i < json.length; i++) {
+            addFriendFrom(json[i].nickname, json[i].headUrl);
+        }
+        $("#nickname").html(info.nickname);
+        $("#img").attr("src", info.headUrl);
+
+        var friends = $.ajax({url: "/getUnFriendList?openid=" + info.openid, async: false}).responseText;
+        console.log(friends);
+        friends = JSON.parse(friends);
+        var ta = document.getElementById('newFriend');
+        for (var j = 0; j < friends.length; j++) {
+
+            var fromUser = friends[j].nickname;
+            var img = friends[j].headUrl;
+            console.log(img);
+            addFrom(fromUser, img);
+        }
+
+        var message = $.ajax({url: "/getAllMessage?openid=" + info.openid, async: false}).responseText;
+        console.log(message);
+        message = JSON.parse(message);
+        var ta = document.getElementById('responseText');
+        for (var k = 0; k < message.length; k++) {
+            var fromUser = message[k].fromUser;
+            if (fromUser == info.nickname) {
+                ta.value = ta.value + '\n' + "【" + fromUser +"】 → 【"+message[k].toUser+"】\n" + message[k].text;
+            } else {
+                ta.value = ta.value + '\n' + "【" + fromUser +"】\n" + message[k].text;
+            }
+
+        }
+    }
+
+    function addFriendFrom(fromUser, img) {
+        var form = document.createElement("from");
+        var ta = document.getElementById('friends');
+        form.id = fromUser;
+        form.innerHTML = form.innerHTML + "        <p id=\"" + fromUser + "\">" + fromUser + "</p>\n" +
+            "<img src=\"" + img + "\">" + "<br>";
+        ta.appendChild(form);
+    }
+
+    function addFrom(fromUser, img) {
+        var form = document.createElement("from");
+        var ta = document.getElementById('newFriend');
+        form.id = fromUser;
+        form.innerHTML = form.innerHTML + "        <p id=\"" + fromUser + "\">" + fromUser + "</p>\n" +
+            "<img src=\"" + img + "\">" +
+            "            <input id = " + fromUser + " type=\"submit\" value=\"同意\"\n" +
+            "        onclick=\"addFriendSuccess(this.parentNode,this.id)\">\n";
+        ta.appendChild(form);
+    }
+
+    function addFriend(toUser) {
+        var data = new FormData;
+        data.append('fromUser', info.openid);
+        data.append('toUser', toUser);
+        console.log(data);
+        $.ajax({
+            type: 'POST',
+            url: "/addFriend",
+            processData: false,
+            contentType: false,
+            data: data
+        });
+    }
+
+    function getUrlVars() {
+
+        var vars = [], hash;
+        var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+        for (var i = 0; i < hashes.length; i++) {
+            hash = hashes[i].split('=');
+            vars.push(hash[0]);
+            vars[hash[0]] = hash[1];
+        }
+        return vars;
+    }
+
+    function getUrlVar(name) {
+        return getUrlVars()[name];
+    }
+</script>
+<div><p id="nickname">nickname</p><img id="img" src="test"></div>
+<br>
+<form onsubmit="return false;">
+    <input type="text" name="toUser" value="toUser">
+    <input type="submit" value="添加好友"
+           onclick="addFriend(this.form.toUser.value)">
+</form>
+<br>
+<form onsubmit="return false;">
+    <input type="text" name="toUser" value="nickname">
+    <input type="text" name="message" value="Hello, World!">
+    <input
+            type="button" value="发送消息"
+            onclick="send(this.form.message.value,this.form.toUser.value)">
+</form>
+<h3>输出：</h3>
+<textarea id="responseText" style="width: 500px; height: 300px;"></textarea>
+<input type="button" onclick="javascript:document.getElementById('responseText').value=''" value="清空">
+<br>
+<p>好友申请</p>
+<div id="newFriend"></div>
+<br>
+<p>好友列表</p>
+<div id="friends">
+    emm
+</div>
+</body>
+</html>
