@@ -1,7 +1,7 @@
 package com.redrock.wechatchat.dao;
 
-import com.redrock.wechatchat.netty.been.Message;
-import com.redrock.wechatchat.netty.been.User;
+import com.redrock.wechatchat.been.Message;
+import com.redrock.wechatchat.been.User;
 import org.apache.ibatis.annotations.*;
 import org.springframework.stereotype.Component;
 

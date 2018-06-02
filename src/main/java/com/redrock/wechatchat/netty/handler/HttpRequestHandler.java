@@ -1,6 +1,6 @@
 package com.redrock.wechatchat.netty.handler;
 
-import com.redrock.wechatchat.netty.NettyContent;
+import com.redrock.wechatchat.netty.NettyRepository;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -13,9 +13,9 @@ import java.util.Map;
 public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
 
     @Autowired
-    private NettyContent content;
+    private NettyRepository content;
 
-    public HttpRequestHandler(NettyContent content) {
+    public HttpRequestHandler(NettyRepository content) {
         this.content=content;
     }
 

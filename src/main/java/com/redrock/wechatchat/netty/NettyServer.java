@@ -26,7 +26,7 @@ public class NettyServer {
     NioEventLoopGroup group = null;
 
     @Autowired
-    NettyContent content;
+    NettyRepository content;
     @Autowired
     UserDao userDao;
 

@@ -1,19 +1,18 @@
 package com.redrock.wechatchat.netty.handler;
 
 import com.google.gson.Gson;
-import com.redrock.wechatchat.netty.been.Message;
-import com.redrock.wechatchat.netty.NettyContent;
+import com.redrock.wechatchat.been.Message;
+import com.redrock.wechatchat.netty.NettyRepository;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
-import org.springframework.beans.factory.annotation.Autowired;
 
 public class ChatHandler extends SimpleChannelInboundHandler<TextWebSocketFrame> {
     private static Gson gson = new Gson();
 
-    private NettyContent content;
+    private NettyRepository content;
 
-    public ChatHandler(NettyContent content) {
+    public ChatHandler(NettyRepository content) {
         this.content = content;
     }
 
@@ -21,7 +20,6 @@ public class ChatHandler extends SimpleChannelInboundHandler<TextWebSocketFrame>
     @Override
     protected void channelRead0(ChannelHandlerContext channelHandlerContext, TextWebSocketFrame socketFrame) throws Exception {
         String json = socketFrame.text();
-        System.out.println(json);
         Message message = gson.fromJson(json, Message.class);
         String fromUser = message.getFromUser();
         String toUser = message.getToUser();
@@ -37,12 +35,4 @@ public class ChatHandler extends SimpleChannelInboundHandler<TextWebSocketFrame>
         }
     }
 
-    @Override
-    public void handlerAdded(ChannelHandlerContext ctx) {
-        System.out.println("add");
-    }
-
-    @Override
-    public void handlerRemoved(ChannelHandlerContext ctx) {
-    }
 }
